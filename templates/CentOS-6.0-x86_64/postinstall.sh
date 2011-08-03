@@ -18,8 +18,8 @@ enabled=1
 gpgcheck=0
 EOM
 
+yum -y erase wireless-tools gtk2 libX11 hicolor-icon-theme avahi freetype bitstream-vera-fonts *firmware words parted
 yum -y install puppet facter ruby-devel rubygems
-yum -y erase wireless-tools gtk2 libX11 hicolor-icon-theme avahi freetype bitstream-vera-fonts
 yum -y clean all
 rm /etc/yum.repos.d/{puppetlabs,epel}.repo
 
@@ -41,6 +41,7 @@ sh /mnt/VBoxLinuxAdditions.run
 umount /mnt
 rm VBoxGuestAdditions_$VBOX_VERSION.iso
 
+sed -i "s/timeout=5/timeout=0/" /boot/grub/menu.lst
 sed -i "s/^.*requiretty/#Defaults requiretty/" /etc/sudoers
 
 dd if=/dev/zero of=/tmp/clean || rm /tmp/clean

@@ -49,4 +49,3 @@ dd if=/dev/zero of=/tmp/clean || rm /tmp/clean
 #poweroff -h
 
 exit
-
