@@ -19,7 +19,7 @@ wget http://stahnma.fedorapeople.org/puppetlabs/5/x86_64/facter-1.6.0-1.x86_64.r
 
 yum -y install kernel-devel-`uname -r` rubygems
 yum -y localinstall --nogpgcheck /tmp/puppet-2.7.1-1.x86_64.rpm /tmp/facter-1.6.0-1.x86_64.rpm
-yum -y erase wireless-tools gtk2 libX11 hicolor-icon-theme avahi freetype bitstream-vera-fonts words parted
+yum -y erase wireless-tools gtk2 libX* hicolor-icon-theme avahi freetype bitstream-vera-fonts words parted NetworkManager* ORBit2 libICE libSM irda-utils nano
 yum -y clean all
 rm /etc/yum.repos.d/epel.repo
 rm /tmp/puppet-2.7.1-1.x86_64.rpm

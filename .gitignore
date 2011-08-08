@@ -1,6 +1,6 @@
 .DS_Store
 gems/*
-iso/*
+iso
 tmp/*
 definitions/*
 Vagrantfile
