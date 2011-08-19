@@ -18,7 +18,7 @@ enabled=1
 gpgcheck=0
 EOM
 
-yum -y erase wireless-tools gtk2 libX11 hicolor-icon-theme avahi freetype bitstream-vera-fonts *firmware words parted
+yum -y erase *i386 *i586 *i686
 yum -y install puppet facter ruby-devel rubygems kernel-devel-`uname -r`
 yum -y --exclude=kernel* update
 yum -y clean all
@@ -42,6 +42,28 @@ sh /mnt/VBoxLinuxAdditions.run
 umount /mnt
 rm VBoxGuestAdditions_$VBOX_VERSION.iso
 
+rm -rf /usr/share/backgrounds/images/*
+rm -rf /usr/share/backgrounds/nature/*
+rm -rf /usr/share/backgrounds/tiles/*
+
+rm -rf /usr/share/anaconda/pixmaps/rnotes/bn_IN
+rm -rf /usr/share/anaconda/pixmaps/rnotes/cs
+rm -rf /usr/share/anaconda/pixmaps/rnotes/de
+rm -rf /usr/share/anaconda/pixmaps/rnotes/es
+rm -rf /usr/share/anaconda/pixmaps/rnotes/fr
+rm -rf /usr/share/anaconda/pixmaps/rnotes/it
+rm -rf /usr/share/anaconda/pixmaps/rnotes/ja
+rm -rf /usr/share/anaconda/pixmaps/rnotes/kr
+rm -rf /usr/share/anaconda/pixmaps/rnotes/nl
+rm -rf /usr/share/anaconda/pixmaps/rnotes/pt
+rm -rf /usr/share/anaconda/pixmaps/rnotes/pt_BR
+rm -rf /usr/share/anaconda/pixmaps/rnotes/ro
+rm -rf /usr/share/anaconda/pixmaps/rnotes/ru
+
+# Make it boot into X
+sed -i "s/id:3:initdefault:/id:5:initdefault:/" /etc/inittab
+
+# Disable grub boot timeout
 sed -i "s/timeout=5/timeout=0/" /boot/grub/menu.lst
 sed -i "s/^.*requiretty/#Defaults requiretty/" /etc/sudoers
 
