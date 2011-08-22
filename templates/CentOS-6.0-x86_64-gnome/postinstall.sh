@@ -64,7 +64,9 @@ rm -rf /usr/share/anaconda/pixmaps/rnotes/ru
 sed -i "s/id:3:initdefault:/id:5:initdefault:/" /etc/inittab
 
 # Disable grub boot timeout
+sed -i "s/timeout=5/timeout=0/" /boot/grub/grub.conf
 sed -i "s/timeout=5/timeout=0/" /boot/grub/menu.lst
+
 sed -i "s/^.*requiretty/#Defaults requiretty/" /etc/sudoers
 
 dd if=/dev/zero of=/tmp/clean || rm /tmp/clean
