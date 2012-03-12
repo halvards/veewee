@@ -1,10 +1,10 @@
-Veewee::Session.declare({
+Veewee::Definition.declare({
   :cpu_count => '1', :memory_size=> '384', 
   :disk_size => '10140', :disk_format => 'VDI', :hostiocache => 'off',
   :os_type_id => 'Ubuntu',
   :iso_file => "ubuntu-11.04-server-i386.iso",
   :iso_src => "http://releases.ubuntu.com/11.04/ubuntu-11.04-server-i386.iso",
-  :iso_md5 => "ce1cee108de737d7492e37069eed538e",
+  :iso_md5 => "b1a479c6593a90029414d201cb83a9cc",
   :iso_download_timeout => "1000",
   :boot_wait => "10", :boot_cmd_sequence => [
     '<Esc><Esc><Enter>',

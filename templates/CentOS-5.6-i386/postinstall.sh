@@ -10,7 +10,7 @@ yum -y install gcc bzip2 make kernel-devel-`uname -r`
 
 yum -y install gcc-c++ zlib-devel openssl-devel readline-devel sqlite3-devel
 
-yum -y erase wireless-tools gtk2 libX11 hicolor-icon-theme avahi freetype bitstream-vera-fonts
+yum -y erase  gtk2 libX11 hicolor-icon-theme avahi freetype bitstream-vera-fonts
 
 yum -y clean all
 
@@ -30,7 +30,7 @@ rm ruby-enterprise-1.8.7-2010.02.tar.gz
 mkdir /home/vagrant/.ssh
 chmod 700 /home/vagrant/.ssh
 cd /home/vagrant/.ssh
-wget --no-check-certificate 'http://github.com/mitchellh/vagrant/raw/master/keys/vagrant.pub' -O authorized_keys
+wget --no-check-certificate 'https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub' -O authorized_keys
 chown -R vagrant /home/vagrant/.ssh
 
 #Installing the virtualbox guest additions

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# var to determine package source
+PKGSRC=cd
+
 date > /etc/vagrant_box_build_time
 
 # launch automated install
@@ -7,7 +10,6 @@ su -c 'aif -p automatic -c aif.cfg'
 
 # copy over the vbox version file
 /bin/cp -f /root/.vbox_version /mnt/root/.vbox_version
-VBOX_VERSION=$(cat /root/.vbox_version)
 
 # chroot into the new system
 mount -o bind /dev /mnt/dev
@@ -52,7 +54,7 @@ sed -i 's:^DAEMONS\(.*\))$:DAEMONS\1 sshd):' /etc/rc.conf
 # install mitchellh's ssh key
 mkdir /home/vagrant/.ssh
 chmod 700 /home/vagrant/.ssh
-wget --no-check-certificate 'http://github.com/mitchellh/vagrant/raw/master/keys/vagrant.pub' -O /home/vagrant/.ssh/authorized_keys
+wget --no-check-certificate 'https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub' -O /home/vagrant/.ssh/authorized_keys
 chmod 600 /home/vagrant/.ssh/authorized_keys
 chown -R vagrant /home/vagrant/.ssh
 
@@ -60,39 +62,29 @@ chown -R vagrant /home/vagrant/.ssh
 sed -i 's/^#\(.*leaseweb.*\)/\1/' /etc/pacman.d/mirrorlist
 
 # update pacman
-pacman -Syy
-pacman -S --noconfirm pacman
+[[ $PKGSRC == 'cd' ]] && pacman -Syy
+[[ $PKGSRC == 'cd' ]] && pacman -S --noconfirm pacman
 
 # upgrade pacman db
 pacman-db-upgrade
 pacman -Syy
 
 # install some packages
-pacman -S --noconfirm glibc git
+pacman -S --noconfirm glibc git pkg-config fakeroot
 gem install --no-ri --no-rdoc chef facter
 cd /tmp
 git clone https://github.com/puppetlabs/puppet.git
 cd puppet
 ruby install.rb --bindir=/usr/bin --sbindir=/sbin
 
-# install virtualbox guest additions
-cd /tmp
-wget http://download.virtualbox.org/virtualbox/"$VBOX_VERSION"/VBoxGuestAdditions_"$VBOX_VERSION".iso
-mount -o loop VBoxGuestAdditions_"$VBOX_VERSION".iso /mnt
-sh /mnt/VBoxLinuxAdditions.run
-umount /mnt
-rm VBoxGuestAdditions_"$VBOX_VERSION".iso
+# set up networking
+[[ $PKGSRC == 'net' ]] && sed -i 's/^\(interface=*\)/\1eth0/' /etc/rc.conf
 
-# clean out pacman cache
-pacman -Scc<<EOF
-y
-y
-EOF
-
-# zero out the fs
-dd if=/dev/zero of=/tmp/clean || rm /tmp/clean
-
+# leave the chroot
 ENDCHROOT
+
+# take down network to prevent next postinstall.sh from starting too soon
+/etc/rc.d/network stop
 
 # and reboot!
 reboot

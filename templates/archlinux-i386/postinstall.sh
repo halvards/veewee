@@ -52,7 +52,7 @@ sed -i 's:^DAEMONS\(.*\))$:DAEMONS\1 sshd):' /etc/rc.conf
 # install mitchellh's ssh key
 mkdir /home/vagrant/.ssh
 chmod 700 /home/vagrant/.ssh
-wget --no-check-certificate 'http://github.com/mitchellh/vagrant/raw/master/keys/vagrant.pub' -O /home/vagrant/.ssh/authorized_keys
+wget --no-check-certificate 'https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub' -O /home/vagrant/.ssh/authorized_keys
 chmod 600 /home/vagrant/.ssh/authorized_keys
 chown -R vagrant /home/vagrant/.ssh
 
@@ -82,6 +82,14 @@ mount -o loop VBoxGuestAdditions_"$VBOX_VERSION".iso /mnt
 sh /mnt/VBoxLinuxAdditions.run
 umount /mnt
 rm VBoxGuestAdditions_"$VBOX_VERSION".iso
+
+# host-only networking
+cat <<EOF
+# enable DHCP at boot on eth0
+# See https://wiki.archlinux.org/index.php/Network#DHCP_fails_at_boot
+dhcpcd -k eth0
+dhcpcd -nd eth0
+EOF >> /etc/rc.local
 
 # clean out pacman cache
 pacman -Scc<<EOF

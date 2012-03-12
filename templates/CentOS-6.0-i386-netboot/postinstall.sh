@@ -2,7 +2,7 @@
 
 date > /etc/vagrant_box_build_time
 
-yum -y erase wireless-tools gtk2 libX11 hicolor-icon-theme avahi freetype bitstream-vera-fonts
+yum -y erase  gtk2 libX11 hicolor-icon-theme avahi freetype bitstream-vera-fonts
 yum -y clean all
 
 gem install --no-ri --no-rdoc chef
@@ -11,7 +11,7 @@ gem install --no-ri --no-rdoc chef
 mkdir /home/vagrant/.ssh
 chmod 700 /home/vagrant/.ssh
 cd /home/vagrant/.ssh
-wget --no-check-certificate 'http://github.com/mitchellh/vagrant/raw/master/keys/vagrant.pub' -O authorized_keys
+wget --no-check-certificate 'https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub' -O authorized_keys
 chown -R vagrant /home/vagrant/.ssh
 
 # Installing the virtualbox guest additions
