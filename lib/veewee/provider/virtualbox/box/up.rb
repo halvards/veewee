@@ -4,7 +4,13 @@ module Veewee
       module BoxCommand
 
         def up(options={})
-          gui_enabled=options[:nogui]==true ? false : true
+
+          unless self.exists?
+            ui.error "Error:: You tried to up a non-existing box '#{name}'"
+            exit -1
+          end
+
+          gui_enabled=options['nogui']==true ? false : true
 
           raise Veewee::Error,"Box is already running" if self.running?
 
@@ -17,11 +23,11 @@ module Veewee
             if guessed_port!=forward[:guest_port]
               # Remove the existing one
               self.delete_forwarding("guestssh")
-              env.ui.warn "Changing ssh port from #{forward[:guest_port]} to #{guessed_port}"
+              ui.warn "Changing ssh port from #{forward[:guest_port]} to #{guessed_port}"
               self.add_ssh_nat_mapping
             end
           else
-              self.add_ssh_nat_mapping
+            self.add_ssh_nat_mapping
           end
 
           self.suppress_messages    
@@ -29,9 +35,9 @@ module Veewee
           # Once assembled we start the machine
           env.logger.info "Started the VM with GUI Enabled? #{gui_enabled}"
 
-          command="#{@vboxcmd} startvm --type gui '#{name}'"
+          command="#{@vboxcmd} startvm --type gui \"#{name}\""
           unless (gui_enabled)
-            command="#{@vboxcmd} startvm --type headless '#{name}'"
+            command="#{@vboxcmd} startvm --type headless \"#{name}\""
           end
           shell_results=shell_exec("#{command}",{:mute => true})
         end
