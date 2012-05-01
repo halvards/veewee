@@ -54,12 +54,13 @@ module Veewee
           box_path=path1.relative_path_from(path2).to_s
 
           if File.exists?("#{box_path}")
-            ui.info "box #{name}.box already exists"
-            exit
+            raise Veewee::Error, "box #{name}.box already exists"
           end
 
           ui.info "Executing vagrant voodoo:"
           export_command="vagrant package --base '#{name}' --output '#{box_path}'"
+          export_command += " --include #{options["include"].join(',')}" unless options["include"].empty?
+          export_command += " --vagrantfile #{options["vagrantfile"].join(' ')}" unless options["vagrantfile"].empty?
           ui.info "#{export_command}"
           shell_exec("#{export_command}") #hmm, needs to get the gem_home set?
           ui.info ""

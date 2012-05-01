@@ -39,7 +39,7 @@ module Veewee
 
             if guessed_port.nil?
               ui.error "No free port available: tried #{min_port}..#{max_port}"
-              exit -1
+              raise Veewee::Error, "No free port available: tried #{min_port}..#{max_port}"
             else
               ui.info "Found port #{guessed_port} available"
             end
@@ -52,9 +52,11 @@ module Veewee
             defaults={ :port => 22, :timeout => 2 , :pollrate => 5}
 
             options=defaults.merge(options)
+            timeout=options[:timeout]
+            timeout=ENV['VEEWEE_TIMEOUT'].to_i unless ENV['VEEWEE_TIMEOUT'].nil?
 
             begin
-              Timeout::timeout(options[:timeout]) do
+              Timeout::timeout(timeout) do
                 connected=false
                 while !connected do
                   begin
@@ -69,7 +71,7 @@ module Veewee
                 end
               end
             rescue Timeout::Error
-              raise 'timeout connecting to port'
+              raise "Timeout connecting to TCP port {options[:port]} exceeded #{timeout} secs."
             end
 
             return false
