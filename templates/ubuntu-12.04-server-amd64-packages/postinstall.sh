@@ -19,8 +19,10 @@ wget http://download.virtualbox.org/virtualbox/$VBOX_VERSION/VBoxGuestAdditions_
 mount -o loop VBoxGuestAdditions_$VBOX_VERSION.iso /mnt
 sh /mnt/VBoxLinuxAdditions.run
 umount /mnt
+rm /tmp/VBoxGuestAdditions_$VBOX_VERSION.iso
 
-rm VBoxGuestAdditions_$VBOX_VERSION.iso
+# Create puppet group
+groupadd puppet
 
 # Setup sudo to allow no-password sudo for "admin"
 groupadd -r admin
@@ -36,7 +38,7 @@ apt-get -y install nfs-common
 apt-get -y install ruby rubygems
 
 # Installing chef & Puppet
-gem install chef --no-ri --no-rdoc
+#gem install chef --no-ri --no-rdoc
 gem install puppet --no-ri --no-rdoc
 
 # Installing vagrant keys
@@ -50,6 +52,8 @@ chown -R vagrant /home/vagrant/.ssh
 # Remove items used for building, since they aren't needed anymore
 apt-get -y remove linux-headers-$(uname -r) build-essential
 apt-get -y autoremove
+
+rm /home/vagrant/VBoxGuestAdditions*.iso
 
 # Zero out the free space to save space in the final image:
 dd if=/dev/zero of=/EMPTY bs=1M
