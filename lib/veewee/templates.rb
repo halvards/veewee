@@ -1,59 +1,62 @@
+require "gem-content"
+
 module Veewee
   class Templates
 
     attr_accessor :env
 
     def initialize(env)
-      @env=env
+      @env = env
       return self
     end
 
     def [](name)
-      result=nil
+      result = nil
       valid_paths(env.template_path).each do |template_dir|
-        template=Veewee::Template.new(name,File.join(template_dir,name),@env)
+        template = Veewee::Template.new(name, File.join(template_dir, name), @env)
         if template.exists?
-          result=template
+          result = template
           return result
-        else
-          return nil
         end
       end
+      return nil
     end
 
     # Fetch all Templates
     def each(&block)
-      templates=Hash.new
+      templates = Hash.new
 
       valid_paths(env.template_path).each do |template_dir|
 
         env.logger.debug("[Template] Searching #{template_dir} for templates")
 
-        subdirs=Dir.glob("#{template_dir}/*")
+        subdirs = Dir.glob("#{template_dir}/*")
         subdirs.each do |sub|
           if File.directory?("#{sub}")
-            name=sub.sub(/#{template_dir}\//,'')
-            template=Veewee::Template.new(name,sub,@env)
+            name = sub.sub(/#{template_dir}\//, '')
+            template = Veewee::Template.new(name, sub, @env)
             if template.exists?
-                env.logger.debug("[Template] template '#{name}' found")
-              templates[name]=template
+              env.logger.debug("[Template] template '#{name}' found")
+              templates[name] = template
             end
           end
         end
       end
 
-      if templates.length==0
-        env.logger.debug("[Template] no templates found") 
+      if templates.length == 0
+        env.logger.debug("[Template] no templates found")
       end
 
       Hash[templates.sort].each(&block)
     end
 
     private
+
     # Traverses path to see which exist or not
     # and checks if available
     def valid_paths(paths)
-      valid_paths=paths.collect { |path|
+      paths = GemContent.get_gem_paths("veewee-templates")
+      valid_paths = paths.collect { |path|
         if File.exists?(path) && File.directory?(path)
           env.logger.info "Path #{path} exists"
           File.expand_path(path)
@@ -64,8 +67,6 @@ module Veewee
       }
       return valid_paths.compact
     end
-
-
 
   end
 end

@@ -22,16 +22,18 @@ module Veewee
 
             keycodes=Veewee::Provider::Core::Helper::Scancode.string_to_keycode(s)
 
+            env.logger.info "Sending keycodes: #{keycodes}"
+
             # VBox seems to have issues with sending the scancodes as one big
             # .join()-ed string. It seems to get them out or order or ignore some.
             # A workaround is to send the scancodes one-by-one.
             codes=""
             for keycode in keycodes.split(' ') do
-              unless keycode=="wait"
+              case keycode
+              when /^wait(\d*)$/ then sleep_guess($1)
+              else
                 send_keycode(keycode)
                 sleep 0.01
-              else
-                sleep 1
               end
             end
             #sleep after each sequence (needs to be param)
@@ -43,11 +45,19 @@ module Veewee
 
         end
 
+        def sleep_guess(str)
+          str = "1" if str == ""
+          sleep str.to_i
+        end
+
         def send_keycode(keycode)
           command= "#{@vboxcmd} controlvm \"#{name}\" keyboardputscancode #{keycode}"
-          env.logger.info "#{command}"
-          sshresult=shell_exec("#{command}",{:mute => true})
-          unless sshresult.stdout.index("E_ACCESSDENIED").nil?
+          env.logger.debug "#{command}"
+          sshresult = shell_exec("#{command}",{:mute => true})
+          env.logger.debug "\
+sshresult.stdout: #{sshresult.stdout.inspect},
+sshresult.stderr: #{sshresult.stderr.inspect}"
+          if sshresult.stdout.index("E_ACCESSDENIED")
             error= "There was an error typing the commands on the console"
             error+="Probably the VM did not get started."
             error+= ""

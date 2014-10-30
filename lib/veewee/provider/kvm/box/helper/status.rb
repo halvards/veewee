@@ -15,11 +15,15 @@ module Veewee
         end
 
         def exists_volume?
-          !@connection.volumes.all(:name => "#{name}.img").nil?
+          !@connection.list_volumes(:name => @volume_name).first.empty?
         end
 
         def exists_vm?
-          !@connection.servers.all(:name => name).nil?
+          begin
+            @connection.list_domains(:name => name)
+          rescue Libvirt::RetrieveError
+            false
+          end
         end
 
       end # End Module

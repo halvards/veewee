@@ -8,6 +8,9 @@ fail()
   exit 1
 }
 
+# Make ssh faster by not waiting on DNS
+echo "UseDNS no" >> /etc/ssh/sshd_config
+
 #kernel source is needed for vbox additions
 yum -y install gcc bzip2 make kernel-devel-`uname -r`
 #yum -y update
@@ -54,6 +57,7 @@ rm VBoxGuestAdditions_$VBOX_VERSION.iso
 
 
 sed -i "s/^.*requiretty/#Defaults requiretty/" /etc/sudoers
+sed -i "s/^\(.*env_keep = \"\)/\1PATH /" /etc/sudoers
 
 #poweroff -h
 

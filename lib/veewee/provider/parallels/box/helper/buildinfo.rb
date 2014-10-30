@@ -15,12 +15,14 @@ module Veewee
         def guest_iso_path
           # So we begin by transferring the ISO file of the vmware tools
 
+          parallels_base_path = "/Applications/Parallels Desktop.app/Contents/Resources/Tools"
+
           # Set default
-          iso_image="/Library/Parallels/Tools/prl-tools-lin.iso"
-          iso_image="/Library/Parallels/Tools/prl-tools-mac.iso" if definition.os_type_id=~/^Darwin/
-          iso_image="/Library/Parallels/Tools/prl-tools-win.iso" if definition.os_type_id=~/^Win/
-          iso_image="/Library/Parallels/Tools/prl-tools-other.iso" if definition.os_type_id=~/^Free/
-          iso_image="/Library/Parallels/Tools/prl-tools-other.iso" if definition.os_type_id=~/^Solaris/
+          iso_image="#{parallels_base_path}/prl-tools-lin.iso"
+          iso_image="#{parallels_base_path}/prl-tools-mac.iso" if definition.os_type_id=~/^Darwin/
+          iso_image="#{parallels_base_path}/prl-tools-win.iso" if definition.os_type_id=~/^Win/
+          iso_image="#{parallels_base_path}/prl-tools-other.iso" if definition.os_type_id=~/^Free/
+          iso_image="#{parallels_base_path}/prl-tools-other.iso" if definition.os_type_id=~/^Solaris/
           return iso_image
 
         end
@@ -36,7 +38,7 @@ module Veewee
 
           ui.info "About to transfer parallels tools iso buildinfo to the box #{name} - #{ip_address} - #{ssh_options}"
           iso_image=guest_iso_path
-          self.scp(iso_image,File.basename(iso_image))
+          self.copy_to_box(iso_image,File.basename(iso_image))
         end
 
       end

@@ -31,6 +31,7 @@
                 <AcceptEula>true</AcceptEula>
                 <FullName>Vagrant Fullname</FullName>
                 <Organization>Vagrant Inc</Organization>
+                <!-- Product Key from http://technet.microsoft.com/en-us/library/ff793406.aspx -->
                 <ProductKey>
                     <WillShowUI>Always</WillShowUI>
                 </ProductKey>
@@ -107,11 +108,11 @@
                 <!--     <Description>Install Chef Client</Description> -->
                 <!--     <Order>2</Order> -->
                 <!-- </SynchronousCommand> -->
-                <SynchronousCommand wcm:action="add">
-                    <CommandLine>cmd.exe /c a:install-cygwin-sshd.bat</CommandLine>
-                    <Description>Install Cygwin SSHD</Description>
-                    <Order>2</Order>
-                </SynchronousCommand>
+                <!-- <SynchronousCommand wcm:action="add"> -->
+                <!--     <CommandLine>cmd.exe /c a:install-cygwin-sshd.bat</CommandLine> -->
+                <!--     <Description>Install Cygwin SSHD</Description> -->
+                <!--     <Order>2</Order> -->
+                <!-- </SynchronousCommand> -->
                 <!-- needed wget -->
                 <!-- <SynchronousCommand wcm:action="add"> -->
                 <!--     <CommandLine>cmd.exe /c a:install-guest-additions.bat</CommandLine> -->
@@ -128,7 +129,7 @@
                 <HelpCustomized>false</HelpCustomized>
             </OEMInformation>
             <!-- Rename computer here. -->
-            <ComputerName>vagrant-2008R1-serverstandard</ComputerName>
+            <ComputerName>vagrant-2008R1</ComputerName>
             <TimeZone>New Zealand Standard Time</TimeZone>
             <RegisteredOwner></RegisteredOwner>
         </component>

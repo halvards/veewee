@@ -3,7 +3,7 @@ REM http://webcache.googleusercontent.com/search?q=cache:SjoPPpuQxuoJ:www.tcm.ph
 REM create the cygwin directory
 cmd /c mkdir %SystemDrive%\cygwin
 
-cmd /c bitsadmin /transfer CygwinSetupExe /download /priority normal http://www.cygwin.com/setup.exe %SystemDrive%\cygwin\cygwin-setup.exe
+cmd /c bitsadmin /transfer CygwinSetupExe /download /priority normal http://www.cygwin.com/setup-x86.exe %SystemDrive%\cygwin\cygwin-setup.exe
 
 REM goto a temp directory
 cd %SystemDrive%\windows\temp
@@ -22,7 +22,7 @@ cmd /c %SystemDrive%\cygwin\bin\bash -c 'PATH=/usr/local/bin:/usr/bin:/bin:/usr/
 
 %SystemDrive%\cygwin\usr\bin\sleep 1
 
-%SystemDrive%\cygwin\bin\bash -c 'PATH=/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin /usr/bin/ssh-host-config -y -c "ntsecbinmode tty" -w "abc&&123!!" '
+%SystemDrive%\cygwin\bin\bash -c 'PATH=/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin /usr/bin/ssh-host-config -y -c "ntsecbinmode" -w "abc&&123!!" '
 
 %SystemDrive%\cygwin\usr\bin\sleep 2 
 

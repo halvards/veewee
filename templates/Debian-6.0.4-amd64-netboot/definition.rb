@@ -4,7 +4,9 @@ Veewee::Definition.declare({
   :disk_size => '10140', :disk_format => 'VDI', :hostiocache => 'off',
   :os_type_id => 'Debian_64',
   :iso_file => "debian-6.0.4-amd64-netinst.iso",
-  :iso_src => "http://cdimage.debian.org/debian-cd/6.0.4/amd64/iso-cd/debian-6.0.4-amd64-netinst.iso",
+  :iso_src => "",
+  :iso_download_instructions => "- You need to download this manually as the ISO is no more directly downloadable\n"+
+  "Visit http://cdimage.debian.org/cdimage/archive/6.0.4/amd64/ and download it via torrent or jigdo",
   :iso_md5 => "4ea4c72e4c9eb6af8f2fa59c3d2b5248",
   :iso_download_timeout => "1000",
   :boot_wait => "10", :boot_cmd_sequence => [
@@ -24,7 +26,7 @@ Veewee::Definition.declare({
     '<Enter>'
   ],
   :kickstart_port => "7122",
-  :kickstart_timeout => "10000",
+  :kickstart_timeout => "300",
   :kickstart_file => "preseed.cfg",
   :ssh_login_timeout => "10000",
   :ssh_user => "vagrant",

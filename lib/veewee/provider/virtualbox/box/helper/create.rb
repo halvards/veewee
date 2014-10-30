@@ -9,9 +9,13 @@ module Veewee
           shell_exec("#{command}")
         end
 
-        def add_sata_controller
+        def add_sata_controller 
           #unless => "${vboxcmd} showvminfo \"${vname}\" | grep \"SATA Controller\" ";
-          command ="#{@vboxcmd} storagectl \"#{name}\" --name \"SATA Controller\" --add sata --hostiocache #{definition.hostiocache} --sataportcount 1"
+          if vbox_version >= '4.3.0'
+            command ="#{@vboxcmd} storagectl \"#{name}\" --name \"SATA Controller\" --add sata --hostiocache #{definition.hostiocache} --portcount #{definition.disk_count}"
+          else
+            command ="#{@vboxcmd} storagectl \"#{name}\" --name \"SATA Controller\" --add sata --hostiocache #{definition.hostiocache} --sataportcount #{definition.disk_count}"
+          end
           shell_exec("#{command}")
         end
 
@@ -25,9 +29,30 @@ module Veewee
         def add_ssh_nat_mapping
 
           unless definition.nil?
+            unless definition.skip_nat_mapping == true
+              #Map SSH Ports
+              if self.running?
+                command="#{@vboxcmd} controlvm \"#{name}\" natpf#{self.natinterface} \"guestssh,tcp,,#{definition.ssh_host_port},,#{definition.ssh_guest_port}\""
+              else
+                command="#{@vboxcmd} modifyvm \"#{name}\" --natpf#{self.natinterface} \"guestssh,tcp,,#{definition.ssh_host_port},,#{definition.ssh_guest_port}\""
+              end
+              shell_exec("#{command}")
+            end
+          end
+        end
+
+        def add_winrm_nat_mapping
+
+          unless definition.nil?
             #Map SSH Ports
-            command="#{@vboxcmd} modifyvm \"#{name}\" --natpf#{self.natinterface} \"guestssh,tcp,,#{definition.ssh_host_port},,#{definition.ssh_guest_port}\""
-            shell_exec("#{command}")
+            unless definition.skip_nat_mapping == true
+              if self.running?
+                command="#{@vboxcmd} controlvm \"#{name}\" natpf#{self.natinterface} \"guestwinrm,tcp,,#{definition.winrm_host_port},,#{definition.winrm_guest_port}\""
+              else
+                command="#{@vboxcmd} modifyvm \"#{name}\" --natpf#{self.natinterface} \"guestwinrm,tcp,,#{definition.winrm_host_port},,#{definition.winrm_guest_port}\""
+              end
+              shell_exec("#{command}")
+            end
           end
         end
 
@@ -66,39 +91,47 @@ module Veewee
 
 
         def create_disk
-            ui.info "Creating new harddrive of size #{definition.disk_size.to_i} "
-
-
             place=get_vbox_home
-            command ="#{@vboxcmd} createhd --filename \"#{File.join(place,name,name+"."+definition.disk_format.downcase)}\" --size \"#{definition.disk_size.to_i}\" --format #{definition.disk_format.downcase}"
-            shell_exec("#{command}")
-
+            1.upto(definition.disk_count.to_i) do |f|
+              ui.info "Creating new harddrive of size #{definition.disk_size.to_i}, format #{definition.disk_format}, variant #{definition.disk_variant} "
+              command ="#{@vboxcmd} createhd --filename \"#{File.join(place,name,name+"#{f}."+definition.disk_format.downcase)}\" --size \"#{definition.disk_size.to_i}\" --format #{definition.disk_format.downcase} --variant #{definition.disk_variant.downcase}"
+              shell_exec("#{command}")
+            end
         end
 
-        def attach_disk
-
+        def attach_disk_common(storagectl, device_number)
           place=get_vbox_home
-          location=name+"."+definition.disk_format.downcase
+          
+          1.upto(definition.disk_count.to_i) do |f|
+            location=name+"#{f}."+definition.disk_format.downcase
+  
+            location="#{File.join(place,name,location)}"
+            ui.info "Attaching disk: #{location}"
+  
+            #command => "${vboxcmd} storageattach \"${vname}\" --storagectl \"SATA Controller\" --port 0 --device 0 --type hdd --medium \"${vname}.vdi\"",
+            command ="#{@vboxcmd} storageattach \"#{name}\" --storagectl \"#{storagectl}\" --port #{f-1} --device #{device_number} --type hdd --medium \"#{location}\""
+            shell_exec("#{command}")
+          end
+        end
 
-          location="#{File.join(place,name,location)}"
-          ui.info "Attaching disk: #{location}"
+        def attach_disk_ide(device_number=0)
+          self.attach_disk_common("IDE Controller", device_number)
+        end
 
-          #command => "${vboxcmd} storageattach \"${vname}\" --storagectl \"SATA Controller\" --port 0 --device 0 --type hdd --medium \"${vname}.vdi\"",
-          command ="#{@vboxcmd} storageattach \"#{name}\" --storagectl \"SATA Controller\" --port 0 --device 0 --type hdd --medium \"#{location}\""
-          shell_exec("#{command}")
-
+        def attach_disk_sata(device_number=0)
+          self.attach_disk_common("SATA Controller", device_number)
         end
 
 
-        def attach_isofile
+        def attach_isofile(device_number=0)
           full_iso_file=File.join(env.config.veewee.iso_dir,definition.iso_file)
           ui.info "Mounting cdrom: #{full_iso_file}"
-          command ="#{@vboxcmd} storageattach \"#{name}\" --storagectl \"IDE Controller\" --type dvddrive --port 0 --device 0 --medium \"#{full_iso_file}\""
+          command ="#{@vboxcmd} storageattach \"#{name}\" --storagectl \"IDE Controller\" --type dvddrive --port 0 --device #{device_number} --medium \"#{full_iso_file}\""
           shell_exec("#{command}")
         end
 
         def attach_guest_additions
-          full_iso_file=File.join(env.config.veewee.iso_dir,"VBoxGuestAdditions_#{self.vbox_version}.iso")
+          full_iso_file=File.join(env.config.veewee.iso_dir,"VBoxGuestAdditions_#{self.vboxga_version}.iso")
           ui.info "Mounting guest additions: #{full_iso_file}"
           command ="#{@vboxcmd} storageattach \"#{name}\" --storagectl \"IDE Controller\" --type dvddrive --port 1 --device 0 --medium \"#{full_iso_file}\""
           shell_exec("#{command}")
@@ -147,6 +180,10 @@ module Veewee
           command="#{@vboxcmd} modifyvm \"#{name}\" --memory #{definition.memory_size}"
           shell_exec("#{command}")
 
+          #setting video memory size
+          command="#{@vboxcmd} modifyvm \"#{name}\" --vram #{definition.video_memory_size}"
+          shell_exec("#{command}")
+
           #setting bootorder
           command="#{@vboxcmd} modifyvm \"#{name}\" --boot1 disk --boot2 dvd --boot3 none --boot4 none"
           shell_exec("#{command}")
@@ -154,20 +191,27 @@ module Veewee
           # Modify the vm to enable or disable hw virtualization extensions
           vm_flags=%w{pagefusion acpi ioapic pae hpet hwvirtex hwvirtexcl nestedpaging largepages vtxvpid synthxcpu rtcuseutc}
 
+	  #setextradata
+          unless definition.virtualbox[:extradata].nil?
+              command="#{@vboxcmd} setextradata \"#{name}\" #{definition.virtualbox[:extradata]}"
+              puts "Setting extra data with #{command}"
+              shell_exec("#{command}")
+          end
+
           vm_flags.each do |vm_flag|
             if definition.instance_variable_defined?("@#{vm_flag}")
               vm_flag_value=definition.instance_variable_get("@#{vm_flag}")
               ui.info "Setting VM Flag #{vm_flag} to #{vm_flag_value}"
-              ui.warn "Used of #{vm_flag} is deprecated - specify your options in :virtualbox => { : vm_options => [\"#{vm_flag}\" => \"#{vm_flag_value}\"]}"
-              command="#{@vboxcmd} modifyvm #{name} --#{vm_flag.to_s} #{vm_flag_value}"
+              ui.warn "Used of #{vm_flag} is deprecated - specify your options in the definition file as \n :virtualbox => { :vm_options => [\"#{vm_flag}\" => \"#{vm_flag_value}\"]}"
+              command="#{@vboxcmd} modifyvm \"#{name}\" --#{vm_flag.to_s} #{vm_flag_value}"
               shell_exec("#{command}")
             end
           end
 
-          unless definition.virtualbox[:vm_options][0].nil?
+          unless definition.virtualbox[:vm_options].nil? || definition.virtualbox[:vm_options][0].nil?
             definition.virtualbox[:vm_options][0].each do |vm_flag,vm_flag_value|
               ui.info "Setting VM Flag #{vm_flag} to #{vm_flag_value}"
-              command="#{@vboxcmd} modifyvm #{name} --#{vm_flag.to_s} #{vm_flag_value}"
+              command="#{@vboxcmd} modifyvm \"#{name}\" --#{vm_flag.to_s} #{vm_flag_value}"
               shell_exec("#{command}")
             end
           end

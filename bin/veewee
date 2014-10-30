@@ -1,6 +1,12 @@
 #!/usr/bin/env ruby
+begin
+  require 'rubygems'
+rescue LoadError
+end
+
 require 'veewee'
 
+ENV["VEEWEE_LOG"] = "debug" if ARGV.include?('--debug')
 env = Veewee::Environment.new
 
 begin
@@ -15,8 +21,9 @@ begin
   env.load!
 
   # Start the CLI
-  ::Veewee::CLI.start(ARGV,:env => env)
+  ::Veewee::CLI.start(ARGV, :env => env)
 
 rescue Veewee::Error => e
   env.ui.error "#{e}"
+  exit 1
 end

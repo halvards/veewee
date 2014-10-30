@@ -18,8 +18,6 @@ module Veewee
     # The valid name for a Veeweefile for this environment
     attr_accessor :veewee_filename
 
-    attr_accessor :loglevel
-
     # This initializes a new Veewee Environment
     # settings argument is a hash with the following options
     # - :definition_dir   : where definitions are located
@@ -28,10 +26,10 @@ module Veewee
     # - :validation_dir  : directory that contains a list of validation tests, that can be run after building a box
     # - :tmp_dir         : directory that will be used for creating temporary files, needs to be rewritable, default to $environment_dir/tmp
     attr_accessor :template_path
-    attr_accessor :definition_dir
-    attr_accessor :iso_dir
+    attr_writer   :definition_dir
+    attr_writer   :iso_dir
     attr_accessor :validation_dir
-    attr_accessor :tmp_dir
+    attr_writer   :tmp_dir
 
     # The {UI} Object to communicate with the outside world
     attr_writer :ui
@@ -45,35 +43,45 @@ module Veewee
     # Hash element of all templates available
     attr_accessor :templates
 
-    # Hash element of all templates available
+    # Hash element of all providers available
     attr_accessor :providers
 
-    # Hash elelement of all OStypes
+    # Hash element of all OS types
     attr_reader :ostypes
 
-    def initialize(options={})
+    # Path to the config file
+    attr_reader :config_filepath
 
-      cwd = ENV['VEEWEE_DIR'] || Dir.pwd
+    attr_accessor :current_provider
+
+    def initialize(options = {})
+      # symbolify commandline options
+      options = options.inject({}) {|result,(key,value)| result.update({key.to_sym => value})}
+
       # If a cwd was provided as option it overrules the default
-      cwd = options[:cwd] if options.has_key?(:cwd)
+      # cwd is again merged later with all options but it has to merged here
+      # because several defaults are generated from it
+      cwd = options[:cwd] || Veewee::Environment.workdir
 
-      defaults={
+      defaults = {
         :cwd => cwd,
         :veewee_filename => "Veeweefile",
-        :loglevel => :info,
-        :definition_dir => File.join(cwd,"definitions"),
-        :template_path => [File.expand_path(File.join(File.dirname(__FILE__),"..","..",'templates')),"templates"],
-        :iso_dir => File.join(cwd,"iso"),
-        :validation_dir => File.join(File.expand_path(File.join(File.dirname(__FILE__),"..","..")),"validation"),
-        :tmp_dir => File.join(cwd,"tmp")
+        :template_path => ["templates"],
+        :validation_dir => File.join(File.expand_path(File.join(File.dirname(__FILE__), "..", "..")), "validation"),
       }
 
       options = defaults.merge(options)
 
-      # We need to set this variable before the first call to the logger object
-      if options.has_key?("debug")
-        ENV['VEEWEE_LOG']="STDOUT"
+      @config_filepath = File.join(options[:cwd], options[:veewee_filename])
+
+      veeweefile_config = defaults.keys.inject({}) do |memo, obj|
+        if config.env.methods.include?(obj) && !config.env.send(obj).nil?
+          memo.merge({ obj => config.env.send(obj) })
+        else
+          memo
+        end
       end
+      options = options.merge(veeweefile_config)
 
       logger.info("environment") { "Environment initialized (#{self})" }
 
@@ -84,16 +92,30 @@ module Veewee
       end
 
       # Definitions
-      @definitions=Veewee::Definitions.new(self)
-      @templates=Veewee::Templates.new(self)
-      @providers=Veewee::Providers.new(self)
+      @definitions = Veewee::Definitions.new(self)
+      @templates = Veewee::Templates.new(self)
+      @providers = Veewee::Providers.new(self, options)
 
       # Read ostypes
-      yamlfile=File.join(File.dirname(__FILE__),"config","ostypes.yml")
+      yamlfile = File.join(File.dirname(__FILE__), "config", "ostypes.yml")
       logger.info "Reading ostype yamlfile #{yamlfile}"
-      @ostypes=YAML.load_file(yamlfile)
+      @ostypes = YAML.load_file(yamlfile)
 
       return self
+    end
+
+    def definition_dir
+      @definition_dir ||= File.join(cwd, "definitions")
+    end
+    def iso_dir
+      @iso_dir ||= File.join(cwd, "iso")
+    end
+    def tmp_dir
+      tmp_dir ||= File.join(cwd, "tmp")
+    end
+
+    def self.workdir
+      ENV['VEEWEE_DIR'] || Dir.pwd
     end
 
     #---------------------------------------------------------------
@@ -115,7 +137,7 @@ module Veewee
     #
     # @return [UI]
     def ui
-      @ui ||=  UI.new(self)
+      @ui ||= UI.new(self)
     end
 
     #---------------------------------------------------------------
@@ -145,8 +167,7 @@ module Veewee
     end
 
     def load_config!
-      @config=Config.new({:env => self}).load_veewee_config()
-
+      @config = Config.new({ :env => self }).load_veewee_config()
       return self
     end
 
@@ -178,26 +199,31 @@ module Veewee
     def logger
       return @logger if @logger
 
-      # Figure out where the output should go to.
       output = nil
-      if ENV["VEEWEE_LOG"] == "STDOUT"
+      loglevel = Logger::ERROR
+
+      # Figure out where the output should go to.
+      if ENV["VEEWEE_LOG"]
         output = STDOUT
-      elsif ENV["VEEWEE_LOG"] == "NULL"
-        output = nil
-      elsif ENV["VEEWEE_LOG"]
-        output = ENV["VEEWEE_LOG"]
-      else
-        output = nil #log_path.join("#{Time.now.to_i}.log")
+        loglevel = Logger.const_get(ENV["VEEWEE_LOG"].upcase)
       end
 
-      # Create the logger and custom formatter
+        # Create the logger and custom formatter
       @logger = ::Logger.new(output)
+      @logger.level = loglevel
       @logger.formatter = Proc.new do |severity, datetime, progname, msg|
         "#{datetime} - #{progname} - [#{resource}] #{msg}\n"
       end
-
       @logger
     end
 
+    # Get box from current provider
+    def get_box(name)
+      if current_provider.nil?
+        raise "Provider is unset in the environment."
+      else
+        providers[current_provider].get_box(name)
+      end
+    end
   end #Class
 end #Module

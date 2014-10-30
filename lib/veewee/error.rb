@@ -1,22 +1,28 @@
 module Veewee
-    class Error < StandardError
-      attr_reader :orginal
-      def initialize(msg, original=$!)
-        super(msg)
-        @original = original; end
+  class Error < StandardError
+    attr_reader :original
+
+    def initialize(msg, original = $!)
+      super(msg)
+      @original = original
     end
 
-    class DefinitionError < Error
-    end
+  end
 
-    class DefinitionNotExist < DefinitionError
-    end
+  class DefinitionError < Error
+  end
 
-    class TemplateError < Error
-    end
+  class DefinitionNotExist < DefinitionError
+  end
 
-    class SshError < Error
-    end
+  class TemplateError < Error
+  end
+
+  class SshError < Error
+  end
+
+  class WinrmError < Error
+  end
 end
 
 #Usage (from the exceptional ruby book)

@@ -1,3 +1,10 @@
+#!/bin/bash
+
+if [ -f .veewee_params ]
+then
+  . .veewee_params
+fi
+
 # Installing the virtualbox guest additions
 if test -f /home/veewee/.vbox_version
 then
@@ -12,7 +19,7 @@ useradd -G admin -p $(perl -e'print crypt("vagrant", "vagrant")') -m -s /bin/bas
 mkdir /home/vagrant/.ssh
 chmod 700 /home/vagrant/.ssh
 cd /home/vagrant/.ssh
-wget --no-check-certificate 'http://github.com/mitchellh/vagrant/raw/master/keys/vagrant.pub' -O authorized_keys
+wget --no-check-certificate 'https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub' -O authorized_keys
 chmod 600 /home/vagrant/.ssh/authorized_keys
 chown -R vagrant /home/vagrant/.ssh
 
